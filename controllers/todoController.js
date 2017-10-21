@@ -1,6 +1,21 @@
 var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+
+mongoose.connect('mongodb://tushar:tushar@ds125565.mlab.com:25565/to-do-nodejs');
+
+
+var todoSchema = new mongoose.Schema({
+	item : String
+});
+
+var Todo = mongoose.model('to-do-nodejs',todoSchema);
+var itemOne = Todo({item: 'but flowers'}).save(function(err){
+	if(err) throw err;
+	console.log('item saved');
+})
 
 var data = [{item: 'get milk'} , {item: 'walk dog'}, {item: 'kick some coding ass'}];
+var urlencodedParser = bodyParser.urlencoded({extended:false});
 
 module.exports = function(app){
 
@@ -8,10 +23,15 @@ module.exports = function(app){
 		res.render('todo' , {todos: data});
 	});
 
-	app.post('/todo',function(req,res){
-
+	app.post('/todo',urlencodedParser, function(req,res){
+		data.push(req.body);
+		res.json(data);
 	});
 	app.delete('/todo',function(req,res){
+		data = data.filter(function(todo){
+			return todo.item.replace(/ /g, '-') !== req.params.item;
 
+		});
+		res.json(data);
 	});
 };
